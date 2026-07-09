@@ -1,0 +1,112 @@
+---
+name: darkness-navigation
+description: 어둠 속 손전등만으로 바닥 선을 피해 목표 지점에 도달하는 공간 탐색 게임. 공포감 극대화.
+trigger_patterns: ["어둠", "손전등", "공포", "선 피하기", "탐색", "빛", "조명 없음"]
+success_rate: 85
+usage_count: 1
+last_optimized: 2026-05-23
+source: ROOM:ZERO 8장 (미니게임 3)
+---
+
+## 핵심 구조
+
+```
+완전한 어둠 + 손전등(원형 가시 범위)
+→ 바닥에 붉은 선들이 복잡하게 그어져 있음
+→ 선을 밟으면 경보 + 이동 불가 패널티
+→ 목표 지점까지 도달하면 클리어
+```
+
+---
+
+## 감정선 적용 타이밍
+
+```
+사용 시점: 공포 최고조 지점
+           (전체 흐름의 60~75% 지점)
+
+감정 온도: 극도로 어두움. 경보음 = 심리적 충격.
+
+전후 연출:
+- 이전: 스피커에서 경고 방송이 끊김 (진행자가 차단됨)
+- 게임 중: 파트너가 다른 위치에서 뭔가 만지고 있음 (불명확)
+- 이후: 서랍 안 손글씨 메모 발견 ("M"의 서명)
+```
+
+---
+
+## 구현 기술
+
+```
+Canvas 기반 구현 추천:
+
+요소:
+- 검은 배경 (전체)
+- 플레이어 위치 중심 원형 가시 영역 (반경 80px)
+- 붉은 선들 (복잡한 미로 패턴)
+- 목표 지점 (초록 점 또는 아이콘)
+
+조작:
+- 마우스/터치 드래그로 이동
+- 선 충돌 감지 → 경보음 + 빨간 플래시 + 3초 패널티
+
+난이도 조절:
+⭐⭐⭐: 선 간격 넓음, 가시 범위 넓음
+⭐⭐⭐⭐: 선 간격 좁음, 가시 범위 좁음
+⭐⭐⭐⭐⭐: 선 간격 매우 좁음 + 랜덤 선 추가
+```
+
+---
+
+## React 구현 패턴
+
+```jsx
+function DarknessNavigation({ params, theme: T, onSolved }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // 어둠 배경
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 손전등 효과 (플레이어 위치 중심 radial gradient)
+    const gradient = ctx.createRadialGradient(px, py, 0, px, py, 80);
+    gradient.addColorStop(0, 'rgba(255,255,200,0.3)');
+    gradient.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // cleanup
+    return () => cancelAnimationFrame(animId);
+  }, []);
+}
+```
+
+---
+
+## JSON 등록 파일 구조
+
+```json
+{
+  "id": "darknessNavigation",
+  "name": "어둠 속 탐색",
+  "thumbnail": "🔦",
+  "description": "손전등만으로 어둠 속을 탐색하세요. 붉은 선을 밟지 마세요.",
+  "params": [
+    {"key": "answer", "label": "목표 지점 코드", "type": "text", "default": ""},
+    {"key": "hint", "label": "힌트", "type": "textarea", "default": "천천히. 소리를 내지 마세요."},
+    {"key": "answerExplain", "label": "정답 해설", "type": "textarea", "default": ""}
+  ]
+}
+```
+
+---
+
+## 개선 기록
+
+| 날짜 | 변경 내용 | 이유 |
+|---|---|---|
+| 2026-05-23 | 첫 생성 | ROOM:ZERO 미니게임 3 완성 후 추출 |
